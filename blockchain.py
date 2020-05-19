@@ -1,11 +1,13 @@
 blockchain = [1]
 
 
-def add_value(value):
-    blockchain.append([blockchain[-1], value])
+def get_last_blockchain_value():
+    return blockchain[-1]
+
+
+def add_value(transaction_amount):
+    blockchain.append([transaction_amount])
     print(blockchain)
 
 
-add_value(5)
-add_value(2)
-add_value(4)
+add_value(get_last_blockchain_value())
