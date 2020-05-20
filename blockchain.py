@@ -35,14 +35,14 @@ while True:
     print('q: quit')
     user_choice = get_user_choice()
 
-    if user_choice == '1':
+    if user_choice is '1':
         transaction_value = get_transaction_value(),
         add_transaction(transaction_value, get_last_blockchain_value())
 
-    elif user_choice == '2':
+    elif user_choice is '2':
         print_blockchain_blocks()
 
-    elif user_choice == 'q':
+    elif user_choice is 'q':
         break
 
     else:
