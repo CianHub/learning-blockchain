@@ -26,6 +26,8 @@ def add_transaction(transaction_amount, last_transaction):
 def print_blockchain_blocks():
     for block in blockchain:
         print(block)
+    else:
+        print('-' * 20)
 
 
 def verify_chain():
@@ -75,8 +77,8 @@ while waiting_for_input:
     if not verify_chain():
         print('Invalid blockchain')
         waiting_for_input = False
-
-    print('Choice registered')
-
+else:
+    # While loops can have an else for when the condition isn't true as can for
+    print('User has left')
 
 print('Program closing')
