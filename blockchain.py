@@ -11,10 +11,15 @@ def get_user_choice():
 
 
 def get_last_blockchain_value():
+    if len(blockchain) < 1:
+        return None
+
     return blockchain[-1]
 
 
-def add_value(transaction_amount, last_transaction=[1]):
+def add_transaction(transaction_amount, last_transaction):
+    if last_transaction == None:
+        last_transaction = [1]
     blockchain.append([transaction_amount, last_transaction])
 
 
@@ -22,9 +27,6 @@ def print_blockchain_blocks():
     for block in blockchain:
         print(block)
 
-
-transaction_value = get_transaction_value()
-add_value(transaction_value)
 
 while True:
     print('Please Choose:')
@@ -35,7 +37,7 @@ while True:
 
     if user_choice == '1':
         transaction_value = get_transaction_value(),
-        add_value(transaction_value, get_last_blockchain_value())
+        add_transaction(transaction_value, get_last_blockchain_value())
 
     elif user_choice == '2':
         print_blockchain_blocks()
