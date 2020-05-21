@@ -31,10 +31,22 @@ def add_transaction(recipient, sender=owner, amount=1.0):
     outstanding_transactions.append(transaction)
 
 
+def hash_block(last_block):
+    hash_block = ''
+
+    for key in last_block:
+        value = last_block[key]
+        hash_block = hash_block + str(value)
+
+    return hash_block
+
+
 def mine_block():
     last_block = blockchain[-1]
+    hashed_block = hash_block(last_block)
+
     block = {
-        'previous_hash': 'last_block',
+        'previous_hash': hashed_block,
         'index': len(blockchain),
         'transactions': outstanding_transactions
     }
@@ -70,6 +82,7 @@ while waiting_for_input:
     print('Please Choose:')
     print('1: add a new transaction value')
     print('2: Output blockchain blocks')
+    print('3: Mine a new block')
     print('q: quit')
     user_choice = get_user_choice()
 
@@ -83,6 +96,10 @@ while waiting_for_input:
     elif user_choice == '2':
         print_blockchain_blocks()
 
+    elif user_choice == '3':
+        mine_block()
+        outstanding_transactions = []
+
     elif user_choice == 'h':
         if len(blockchain):
             blockchain[0] = 2
@@ -93,9 +110,9 @@ while waiting_for_input:
     else:
         print('Input was invalid, please enter 1 or 2')
 
-    if not verify_chain():
-        print('Invalid blockchain')
-        waiting_for_input = False
+    # if not verify_chain():
+    #     print('Invalid blockchain')
+    #     waiting_for_input = False
 else:
     # While loops can have an else for when the condition isn't true as can for
     print('User has left')
