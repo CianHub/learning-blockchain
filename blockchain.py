@@ -1,4 +1,9 @@
-blockchain = []
+genesis_block = {
+    'previous_hash': '',
+    'index': 0,
+    'transactions': []
+}
+blockchain = [genesis_block]
 outstanding_transactions = []
 owner = 'Cian'
 
@@ -27,7 +32,13 @@ def add_transaction(recipient, sender=owner, amount=1.0):
 
 
 def mine_block():
-    pass
+    last_block = blockchain[-1]
+    block = {
+        'previous_hash': 'last_block',
+        'index': len(blockchain),
+        'transactions': outstanding_transactions
+    }
+    blockchain.append(block)
 
 
 def print_blockchain_blocks():
@@ -69,7 +80,6 @@ while waiting_for_input:
         # Skips optional second argument by using named parameter
         add_transaction(recipient, amount=amount)
         print(outstanding_transactions)
-
     elif user_choice == '2':
         print_blockchain_blocks()
 
