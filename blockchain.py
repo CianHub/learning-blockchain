@@ -31,8 +31,8 @@ def add_transaction(recipient, sender=owner, amount=1.0):
     outstanding_transactions.append(transaction)
 
 
-def hash_block(last_block):
-    return '-'.join([str(last_block[key]) for key in last_block])
+def hash_block(block):
+    return '-'.join([str(block[key]) for key in block])
 
 
 def mine_block():
@@ -56,19 +56,16 @@ def print_blockchain_blocks():
 
 
 def verify_chain():
-    block_index = 0
-    is_valid = True
-    for block_index in range(len(blockchain)):
-        if block_index == 0:
+    # enumerate returns a tuple that contains the value and the index
+    for (index, block) in enumerate(blockchain):
+        if index == 0:
             continue
-        # Checks if the first element of a block is equal to the entire previous block
-        elif blockchain[block_index][0] == blockchain[block_index - 1]:
-            is_valid = True
-        else:
-            is_valid = False
-            break
-
-    return is_valid
+        # Compare the previous_hash value of the current block to the hashed previous block
+        if block['previous_hash'] != hash_block(blockchain[index - 1]):
+            # Block is not valid
+            return False
+    # Block is valid
+    return True
 
 
 waiting_for_input = True
@@ -105,9 +102,9 @@ while waiting_for_input:
     else:
         print('Input was invalid, please enter 1 or 2')
 
-    # if not verify_chain():
-    #     print('Invalid blockchain')
-    #     waiting_for_input = False
+    if not verify_chain():
+        print('Invalid blockchain')
+        waiting_for_input = False
 else:
     # While loops can have an else for when the condition isn't true as can for
     print('User has left')
