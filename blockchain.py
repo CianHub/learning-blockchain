@@ -1,8 +1,12 @@
 blockchain = []
+outstanding_transactions = []
+owner = 'Cian'
 
 
-def get_transaction_value():
-    return int(input('Enter a number: '))
+def get_transaction_data():
+    recipient = input('Enter the recipient: ')
+    amount = float(input('Enter the amount of the transaction: '))
+    return (recipient, amount)  # Return both as a tuple
 
 
 def get_user_choice():
@@ -17,10 +21,16 @@ def get_last_blockchain_value():
     return blockchain[-1]
 
 
-def add_transaction(transaction_amount, last_transaction):
+def add_transaction(recipient, sender=owner, amount=1.0):
     if last_transaction == None:
         last_transaction = [1]
-    blockchain.append([transaction_amount, last_transaction])
+
+    transaction = {'sender': sender, 'amount': amount, 'recipient': recipient}
+    outstanding_transactions.append(transaction)
+
+
+def mine_block():
+    pass
 
 
 def print_blockchain_blocks():
@@ -56,8 +66,10 @@ while waiting_for_input:
     user_choice = get_user_choice()
 
     if user_choice == '1':
-        transaction_value = get_transaction_value(),
-        add_transaction(transaction_value, get_last_blockchain_value())
+        transaction_data = get_transaction_data(),
+        recipient, amount = transaction_data  # Pulls out the tuple values
+        # Skips optional second argument by using named parameter
+        add_transaction(recipient, amount=amount)
 
     elif user_choice == '2':
         print_blockchain_blocks()
