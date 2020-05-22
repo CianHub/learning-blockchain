@@ -49,6 +49,7 @@ def mine_block():
         'transactions': outstanding_transactions
     }
     blockchain.append(block)
+    return True
 
 
 def print_blockchain_blocks():
@@ -56,6 +57,24 @@ def print_blockchain_blocks():
         print(block)
     else:
         print('-' * 20)
+
+
+def get_balance(participant):
+    # Gets each block in the blockchain, get the transaction property
+    # Iterate through the blocks transactions
+    # Return a list of values where the provided participant matches the sender property of the transaction
+    amount_sent = 0
+    transactions_where_sender = [
+        [transaction['amount'] for transaction in block['transactions']
+         if transaction['sender'] == participant]
+        for block in blockchain]
+
+    # Iterate through the list and sum the values
+    for transaction in transactions_where_sender:
+        if len(transaction) > 0:
+            amount_sent += transaction[0]
+
+    return amount_sent
 
 
 def verify_chain():
@@ -88,13 +107,14 @@ while waiting_for_input:
         recipient, amount = transaction_data  # Pulls out the tuple values
         # Skips optional second argument by using named parameter
         add_transaction(recipient, amount=amount)
-        print(outstanding_transactions)
+        print(get_balance('Cian'))
+
     elif user_choice == '2':
         print_blockchain_blocks()
 
     elif user_choice == '3':
-        mine_block()
-        outstanding_transactions = []
+        if mine_block():
+            outstanding_transactions = []
 
     elif user_choice == '4':
         print(participants)
