@@ -7,13 +7,14 @@ genesis_block = {
 blockchain = [genesis_block]
 outstanding_transactions = []
 owner = 'Cian'
-participants = {'Cian'}
+participants = {owner}
 
 
 def get_transaction_data():
+    # Return both values  as a tuple
     recipient = input('Enter the recipient: ')
     amount = float(input('Enter the amount of the transaction: '))
-    return tuple((recipient, amount))  # Return both as a tuple
+    return tuple((recipient, amount))
 
 
 def get_user_choice():
@@ -29,8 +30,19 @@ def get_last_blockchain_value():
 
 
 def add_transaction(recipient, sender=owner, amount=1.0):
+    # Creates the transaction dictionary
     transaction = {'sender': sender, 'amount': amount, 'recipient': recipient}
-    outstanding_transactions.append(transaction)
+
+    if verify_transaction(transaction):
+        outstanding_transactions.append(transaction)
+        add_transaction_participants(sender, recipient)
+        return True
+
+    return False
+
+
+def add_transaction_participants(sender, recipient):
+    # Adds the sender and recipient to the set of participants
     participants.add(sender)
     participants.add(recipient)
 
@@ -81,7 +93,31 @@ def print_blockchain_blocks():
 def get_balance(participant):
     amount_sent = get_amount_sent(participant)
     amount_received = get_amount_received(participant)
-    return amount_received - amount_sent
+    outstanding_sent = get_outstanding_transaction_amount_sent_for_user(
+        participant)
+    outstanding_received = get_outstanding_transaction_amount_received_for_user(
+        participant)
+    return (outstanding_received + amount_received) - (amount_sent + outstanding_sent)
+
+
+def get_outstanding_transaction_amount_sent_for_user(participant):
+    outstanding_transactions_where_sender_amount = 0
+
+    for transaction in outstanding_transactions:
+        if transaction['sender'] == participant:
+            outstanding_transactions_where_sender_amount += transaction['amount']
+
+    return outstanding_transactions_where_sender_amount
+
+
+def get_outstanding_transaction_amount_received_for_user(participant):
+    outstanding_transactions_where_recipient_amount = 0
+
+    for transaction in outstanding_transactions:
+        if transaction['recipient'] == participant:
+            outstanding_transactions_where_sender_amount += transaction['amount']
+
+    return outstanding_transactions_where_recipient_amount
 
 
 def get_amount_sent(participant):
@@ -123,7 +159,8 @@ def get_amount_received(participant):
 
 
 def verify_chain():
-    # enumerate returns a tuple that contains the value and the index
+    # enumerate returns a tuple that containing the index and the value
+    # Index and block variables are assigned values from enumarate
     for (index, block) in enumerate(blockchain):
         if index == 0:
             continue
@@ -133,6 +170,11 @@ def verify_chain():
             return False
     # Block is valid
     return True
+
+
+def verify_transaction(transaction):
+    # Get the senders balance and return if they have enough to make a transaction
+    return get_balance(transaction['sender']) >= transaction['amount']
 
 
 waiting_for_input = True
@@ -150,14 +192,20 @@ while waiting_for_input:
     if user_choice == '1':
         transaction_data = get_transaction_data()
 
-        recipient, amount = transaction_data  # Pulls out the tuple values
-        # Skips optional second argument by using named parameter
-        add_transaction(recipient, amount=amount)
+        # Pulls out the tuple values
+        recipient, amount = transaction_data
+
+        # Skips optional second argument by naming parameter
+        if add_transaction(recipient, amount=amount):
+            print('Transaction Successful')
+        else:
+            print('Insufficient Balance To Make Transaction')
 
     elif user_choice == '2':
         print_blockchain_blocks()
 
     elif user_choice == '3':
+        # Resets outstanding transactions on successful mining
         if mine_block():
             outstanding_transactions = []
 
@@ -166,10 +214,6 @@ while waiting_for_input:
 
     elif user_choice == '5':
         print(get_balance('Cian'))
-
-    elif user_choice == 'h':
-        if len(blockchain):
-            blockchain[0] = 2
 
     elif user_choice == 'q':
         waiting_for_input = False
