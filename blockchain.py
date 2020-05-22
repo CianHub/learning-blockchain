@@ -175,6 +175,10 @@ def verify_chain():
     return True
 
 
+def verify_transactions_validity():
+    return all([verify_transaction(transaction) for transaction in outstanding_transactions])
+
+
 def verify_transaction(transaction):
     # Get the senders balance and return if they have enough to make a transaction
     return get_balance(transaction['sender']) >= transaction['amount']
@@ -189,6 +193,7 @@ while waiting_for_input:
     print('3: Mine a new block')
     print('4: Output participants')
     print('5: Output your balance')
+    print('6: Check outstanding transaction validity')
     print('q: Quit')
     user_choice = get_user_choice()
 
@@ -218,6 +223,12 @@ while waiting_for_input:
     elif user_choice == '5':
         if get_balance(owner):
             print(get_balance(owner))
+
+    elif user_choice == '6':
+        if verify_transactions_validity():
+            print('All transactions valid')
+        else:
+            print('Invalid transactions present')
 
     elif user_choice == 'q':
         waiting_for_input = False
