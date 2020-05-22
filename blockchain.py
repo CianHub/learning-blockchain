@@ -1,3 +1,4 @@
+MINING_REWARD = 10.00
 genesis_block = {
     'previous_hash': '',
     'index': 0,
@@ -38,17 +39,35 @@ def hash_block(block):
     return '-'.join([str(block[key]) for key in block])
 
 
+def reward_user_for_mining():
+    # Adds a new transaction that rewards the user for mining
+    reward_transaction = {
+        'sender': 'MINING',
+        'recipient': owner,
+        'amount': MINING_REWARD
+    }
+
+    outstanding_transactions.append(reward_transaction)
+
+
 def mine_block():
+    # Gets the previous block and creates a hash from it
     last_block = blockchain[-1]
     hashed_block = hash_block(last_block)
-    print(hashed_block)
 
+    # Adds the reward for mining to the outstanding transactions
+    reward_user_for_mining()
+
+    # Creates the new block
     block = {
         'previous_hash': hashed_block,
         'index': len(blockchain),
         'transactions': outstanding_transactions
     }
+
+    # Adds the new block
     blockchain.append(block)
+
     return True
 
 
