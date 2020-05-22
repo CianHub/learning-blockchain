@@ -60,10 +60,17 @@ def print_blockchain_blocks():
 
 
 def get_balance(participant):
+    amount_sent = get_amount_sent(participant)
+    amount_received = get_amount_received(participant)
+    return amount_received - amount_sent
+
+
+def get_amount_sent(participant):
+    amount_sent = 0
+
     # Gets each block in the blockchain, get the transaction property
     # Iterate through the blocks transactions
     # Return a list of values where the provided participant matches the sender property of the transaction
-    amount_sent = 0
     transactions_where_sender = [
         [transaction['amount'] for transaction in block['transactions']
          if transaction['sender'] == participant]
@@ -75,6 +82,25 @@ def get_balance(participant):
             amount_sent += transaction[0]
 
     return amount_sent
+
+
+def get_amount_received(participant):
+    amount_received = 0
+
+    # Gets each block in the blockchain, get the transaction property
+    # Iterate through the blocks transactions
+    # Return a list of values where the provided participant matches the recipient property of the transaction
+    transactions_where_receiver = [
+        [transaction['amount'] for transaction in block['transactions']
+         if transaction['recipient'] == participant]
+        for block in blockchain]
+
+    # Iterate through the list and sum the values
+    for transaction in transactions_where_receiver:
+        if len(transaction) > 0:
+            amount_received += transaction[0]
+
+    return amount_received
 
 
 def verify_chain():
@@ -98,6 +124,7 @@ while waiting_for_input:
     print('2: Output blockchain blocks')
     print('3: Mine a new block')
     print('4: Output participants')
+    print('5: Output your balance')
     print('q: Quit')
     user_choice = get_user_choice()
 
@@ -107,7 +134,6 @@ while waiting_for_input:
         recipient, amount = transaction_data  # Pulls out the tuple values
         # Skips optional second argument by using named parameter
         add_transaction(recipient, amount=amount)
-        print(get_balance('Cian'))
 
     elif user_choice == '2':
         print_blockchain_blocks()
@@ -118,6 +144,9 @@ while waiting_for_input:
 
     elif user_choice == '4':
         print(participants)
+
+    elif user_choice == '5':
+        print(get_balance('Cian'))
 
     elif user_choice == 'h':
         if len(blockchain):
