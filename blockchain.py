@@ -6,6 +6,7 @@ genesis_block = {
 blockchain = [genesis_block]
 outstanding_transactions = []
 owner = 'Cian'
+participants = {'Cian'}
 
 
 def get_transaction_data():
@@ -29,6 +30,8 @@ def get_last_blockchain_value():
 def add_transaction(recipient, sender=owner, amount=1.0):
     transaction = {'sender': sender, 'amount': amount, 'recipient': recipient}
     outstanding_transactions.append(transaction)
+    participants.add(sender)
+    participants.add(recipient)
 
 
 def hash_block(block):
@@ -72,10 +75,11 @@ waiting_for_input = True
 
 while waiting_for_input:
     print('Please Choose:')
-    print('1: add a new transaction value')
+    print('1: Add a new transaction value')
     print('2: Output blockchain blocks')
     print('3: Mine a new block')
-    print('q: quit')
+    print('4: Output participants')
+    print('q: Quit')
     user_choice = get_user_choice()
 
     if user_choice == '1':
@@ -91,6 +95,9 @@ while waiting_for_input:
     elif user_choice == '3':
         mine_block()
         outstanding_transactions = []
+
+    elif user_choice == '4':
+        print(participants)
 
     elif user_choice == 'h':
         if len(blockchain):
