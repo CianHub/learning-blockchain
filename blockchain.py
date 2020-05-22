@@ -59,7 +59,10 @@ def reward_user_for_mining():
         'amount': MINING_REWARD
     }
 
-    outstanding_transactions.append(reward_transaction)
+    dup_transactions = outstanding_transactions[:]
+    dup_transactions.append(reward_transaction)
+
+    return dup_transactions
 
 
 def mine_block():
@@ -68,13 +71,13 @@ def mine_block():
     hashed_block = hash_block(last_block)
 
     # Adds the reward for mining to the outstanding transactions
-    reward_user_for_mining()
+    dup_transactions = reward_user_for_mining()
 
     # Creates the new block
     block = {
         'previous_hash': hashed_block,
         'index': len(blockchain),
-        'transactions': outstanding_transactions
+        'transactions': dup_transactions
     }
 
     # Adds the new block
@@ -213,7 +216,8 @@ while waiting_for_input:
         print(participants)
 
     elif user_choice == '5':
-        print(get_balance('Cian'))
+        if get_balance(owner):
+            print(get_balance(owner))
 
     elif user_choice == 'q':
         waiting_for_input = False
