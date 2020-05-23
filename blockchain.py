@@ -1,3 +1,5 @@
+import functools
+
 MINING_REWARD = 10.00
 genesis_block = {
     'previous_hash': '',
@@ -96,36 +98,14 @@ def print_blockchain_blocks():
 def get_balance(participant):
     amount_sent = get_amount_sent(participant)
     amount_received = get_amount_received(participant)
-    outstanding_sent = get_outstanding_transaction_amount_sent_for_user(
-        participant)
-    outstanding_received = get_outstanding_transaction_amount_received_for_user(
-        participant)
+    outstanding_sent = sum_outstanding_transactions_by_participant_type(
+        'sender', participant)
+    outstanding_received = sum_outstanding_transactions_by_participant_type(
+        'recipient', participant)
     return (outstanding_received + amount_received) - (amount_sent + outstanding_sent)
 
 
-def get_outstanding_transaction_amount_sent_for_user(participant):
-    outstanding_transactions_where_sender_amount = 0
-
-    for transaction in outstanding_transactions:
-        if transaction['sender'] == participant:
-            outstanding_transactions_where_sender_amount += transaction['amount']
-
-    return outstanding_transactions_where_sender_amount
-
-
-def get_outstanding_transaction_amount_received_for_user(participant):
-    outstanding_transactions_where_recipient_amount = 0
-
-    for transaction in outstanding_transactions:
-        if transaction['recipient'] == participant:
-            outstanding_transactions_where_sender_amount += transaction['amount']
-
-    return outstanding_transactions_where_recipient_amount
-
-
 def get_amount_sent(participant):
-    amount_sent = 0
-
     # Gets each block in the blockchain, get the transaction property
     # Iterate through the blocks transactions
     # Return a list of values where the provided participant matches the sender property of the transaction
@@ -134,17 +114,10 @@ def get_amount_sent(participant):
          if transaction['sender'] == participant]
         for block in blockchain]
 
-    # Iterate through the list and sum the values
-    for transaction in transactions_where_sender:
-        if len(transaction) > 0:
-            amount_sent += transaction[0]
-
-    return amount_sent
+    return sum_amounts_list(transactions_where_sender)
 
 
 def get_amount_received(participant):
-    amount_received = 0
-
     # Gets each block in the blockchain, get the transaction property
     # Iterate through the blocks transactions
     # Return a list of values where the provided participant matches the recipient property of the transaction
@@ -153,12 +126,18 @@ def get_amount_received(participant):
          if transaction['recipient'] == participant]
         for block in blockchain]
 
-    # Iterate through the list and sum the values
-    for transaction in transactions_where_receiver:
-        if len(transaction) > 0:
-            amount_received += transaction[0]
+    return sum_amounts_list(transactions_where_receiver)
 
-    return amount_received
+
+def sum_amounts_list(amount_list):
+    # Iterate through the list and sum the values checks if next value is valid before adding
+    return functools.reduce(lambda total, next_value: total + next_value[0]
+                            if len(next_value) > 0 else 0, amount_list, 0)
+
+
+def sum_outstanding_transactions_by_participant_type(participant_type, participant):
+    return functools.reduce(lambda total, next_value: total +
+                            next_value if next_value[participant_type] == participant else 0, outstanding_transactions, 0)
 
 
 def verify_chain():
