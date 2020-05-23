@@ -222,7 +222,7 @@ while waiting_for_input:
 
     elif user_choice == '5':
         if get_balance(owner):
-            print(get_balance(owner))
+            print(f'{owner}\'s balance is: {get_balance(owner):6.2f}')
 
     elif user_choice == '6':
         if verify_transactions_validity():
