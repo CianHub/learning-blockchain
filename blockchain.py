@@ -131,13 +131,13 @@ def get_amount_received(participant):
 
 def sum_amounts_list(amount_list):
     # Iterate through the list and sum the values checks if next value is valid before adding
-    return functools.reduce(lambda total, next_value: total + next_value[0]
+    return functools.reduce(lambda total, next_value: total + sum(next_value)
                             if len(next_value) > 0 else 0, amount_list, 0)
 
 
 def sum_outstanding_transactions_by_participant_type(participant_type, participant):
     return functools.reduce(lambda total, next_value: total +
-                            next_value if next_value[participant_type] == participant else 0, outstanding_transactions, 0)
+                            next_value['amount'] if next_value[participant_type] == participant else 0, outstanding_transactions, 0)
 
 
 def verify_chain():
@@ -213,7 +213,7 @@ while waiting_for_input:
         waiting_for_input = False
 
     else:
-        print('Input was invalid, please enter 1 or 2')
+        print('Input was invalid, please enter a valid option')
 
     if not verify_chain():
         print('Invalid blockchain')
