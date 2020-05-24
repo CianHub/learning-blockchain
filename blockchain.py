@@ -6,7 +6,8 @@ MINING_REWARD = 10.00
 genesis_block = {
     'previous_hash': '',
     'index': 0,
-    'transactions': []
+    'transactions': [],
+    'proof': 100
 }
 blockchain = [genesis_block]
 outstanding_transactions = []
@@ -64,14 +65,14 @@ def validate_proof_of_work(transactions, last_hash, proof_number):
     guess = (str(transactions) + str(last_hash) + str(proof_number)).encode()
     guess_hash = hashlib.sha256(guess).hexdigest()
     print(guess_hash)
-    return guess_hash[0:2] == '00'
+    return guess_hash[0:4] == '0000'
 
 
 def proof_of_work():
     last_block = blockchain[-1]
     last_hash = hash_block(last_block)
     proof_number = 0
-    while validate_proof_of_work(outstanding_transactions, last_hash, proof_number):
+    while not validate_proof_of_work(outstanding_transactions, last_hash, proof_number):
         proof_number += 1
     return proof_number
 
@@ -94,6 +95,7 @@ def mine_block():
     # Gets the previous block and creates a hash from it
     last_block = blockchain[-1]
     hashed_block = hash_block(last_block)
+    proof = proof_of_work()
 
     # Adds the reward for mining to the outstanding transactions
     dup_transactions = reward_user_for_mining()
@@ -102,7 +104,8 @@ def mine_block():
     block = {
         'previous_hash': hashed_block,
         'index': len(blockchain),
-        'transactions': dup_transactions
+        'transactions': dup_transactions,
+        'proof': proof
     }
 
     # Adds the new block
@@ -173,6 +176,10 @@ def verify_chain():
         if block['previous_hash'] != hash_block(blockchain[index - 1]):
             # Block is not valid
             return False
+        if not validate_proof_of_work(block['transactions'][:-1], block['previous_hash'], block['proof']):
+            # Block is not valid
+            return False
+
     # Block is valid
     return True
 
