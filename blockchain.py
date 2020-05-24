@@ -1,7 +1,8 @@
 import functools
 import hashlib
-import json
 from collections import OrderedDict
+
+import hash_util
 
 MINING_REWARD = 10.00
 genesis_block = {
@@ -55,26 +56,18 @@ def add_transaction_participants(sender, recipient):
     participants.add(recipient)
 
 
-def hash_block(block):
-    # converts block dictionary to a binary string and encodes it
-    # creates a btye hash from the binary string
-    # converst the byte hash to a string with hexdigest
-    # sort the dictionary by keys so it will always be in the same order
-    return hashlib.sha256(json.dumps(block, sort_keys=True).encode()).hexdigest()
-
-
 def validate_proof_of_work(transactions, last_hash, proof_number):
     # Create a hash from the outstanding transactions, hash of the block and the proof of work guess number
-    # check if the first two digits are 00
+    # check if the first four digits are 00
     guess = (str(transactions) + str(last_hash) + str(proof_number)).encode()
-    guess_hash = hashlib.sha256(guess).hexdigest()
+    guess_hash = hash_util.hash_string_256(guess)
     print(guess_hash)
     return guess_hash[0:4] == '0000'
 
 
 def proof_of_work():
     last_block = blockchain[-1]
-    last_hash = hash_block(last_block)
+    last_hash = hash_util.hash_block(last_block)
     proof_number = 0
     while not validate_proof_of_work(outstanding_transactions, last_hash, proof_number):
         proof_number += 1
@@ -97,7 +90,7 @@ def reward_user_for_mining():
 def mine_block():
     # Gets the previous block and creates a hash from it
     last_block = blockchain[-1]
-    hashed_block = hash_block(last_block)
+    hashed_block = hash_util.hash_block(last_block)
     proof = proof_of_work()
 
     # Adds the reward for mining to the outstanding transactions
@@ -176,7 +169,7 @@ def verify_chain():
         if index == 0:
             continue
         # Compare the previous_hash value of the current block to the hashed previous block
-        if block['previous_hash'] != hash_block(blockchain[index - 1]):
+        if block['previous_hash'] != hash_util.hash_block(blockchain[index - 1]):
             # Block is not valid
             return False
         if not validate_proof_of_work(block['transactions'][:-1], block['previous_hash'], block['proof']):
