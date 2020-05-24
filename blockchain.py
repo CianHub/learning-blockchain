@@ -58,6 +58,24 @@ def hash_block(block):
     return hashlib.sha256(json.dumps(block).encode()).hexdigest()
 
 
+def validate_proof_of_work(transactions, last_hash, proof_number):
+    # Create a hash from the outstanding transactions, hash of the block and the proof of work guess number
+    # check if the first two digits are 00
+    guess = (str(transactions) + str(last_hash) + str(proof_number)).encode()
+    guess_hash = hashlib.sha256(guess).hexdigest()
+    print(guess_hash)
+    return guess_hash[0:2] == '00'
+
+
+def proof_of_work():
+    last_block = blockchain[-1]
+    last_hash = hash_block(last_block)
+    proof_number = 0
+    while validate_proof_of_work(outstanding_transactions, last_hash, proof_number):
+        proof_number += 1
+    return proof_number
+
+
 def reward_user_for_mining():
     # Adds a new transaction that rewards the user for mining
     reward_transaction = {
