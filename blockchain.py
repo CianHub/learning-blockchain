@@ -1,6 +1,7 @@
 import functools
 import hashlib
 import json
+from collections import OrderedDict
 
 MINING_REWARD = 10.00
 genesis_block = {
@@ -36,8 +37,10 @@ def get_last_blockchain_value():
 
 def add_transaction(recipient, sender=owner, amount=1.0):
     # Creates the transaction dictionary
-    transaction = {'sender': sender, 'amount': amount, 'recipient': recipient}
-
+    # An ordered dict will always have the same order to can be reliably hashed
+    # ordered dict consturctor takes a list of tuple key value pairs
+    transaction = OrderedDict(
+        [('sender', sender), ('amount', amount), ('recipient', recipient)])
     if verify_transaction(transaction):
         outstanding_transactions.append(transaction)
         add_transaction_participants(sender, recipient)
@@ -56,7 +59,8 @@ def hash_block(block):
     # converts block dictionary to a binary string and encodes it
     # creates a btye hash from the binary string
     # converst the byte hash to a string with hexdigest
-    return hashlib.sha256(json.dumps(block).encode()).hexdigest()
+    # sort the dictionary by keys so it will always be in the same order
+    return hashlib.sha256(json.dumps(block, sort_keys=True).encode()).hexdigest()
 
 
 def validate_proof_of_work(transactions, last_hash, proof_number):
@@ -79,11 +83,10 @@ def proof_of_work():
 
 def reward_user_for_mining():
     # Adds a new transaction that rewards the user for mining
-    reward_transaction = {
-        'sender': 'MINING',
-        'recipient': owner,
-        'amount': MINING_REWARD
-    }
+    # An ordered dict will always have the same order to can be reliably hashed
+    # ordered dict consturctor takes a list of tuple key value pairs
+    reward_transaction = OrderedDict(
+        [('sender', 'MINING'), ('recipient', owner), ('amount', MINING_REWARD)])
 
     dup_transactions = outstanding_transactions[:]
     dup_transactions.append(reward_transaction)
