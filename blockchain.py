@@ -1,4 +1,6 @@
 import functools
+import hashlib
+import json
 
 MINING_REWARD = 10.00
 genesis_block = {
@@ -50,7 +52,10 @@ def add_transaction_participants(sender, recipient):
 
 
 def hash_block(block):
-    return '-'.join([str(block[key]) for key in block])
+    # converts block dictionary to a binary string and encodes it
+    # creates a btye hash from the binary string
+    # converst the byte hash to a string with hexdigest
+    return hashlib.sha256(json.dumps(block).encode()).hexdigest()
 
 
 def reward_user_for_mining():
