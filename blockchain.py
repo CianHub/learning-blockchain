@@ -1,6 +1,7 @@
 import functools
 import hashlib
 from collections import OrderedDict
+import json
 
 import hash_util
 
@@ -76,18 +77,44 @@ def proof_of_work():
 
 def save_blockchain_in_file():
     with open('blockchain.txt', mode='w') as f:
-        f.write(str(blockchain))
+        f.write(json.dumps(blockchain))
         f.write('\n')
-        f.write(str(outstanding_transactions))
+        f.write(json.dumps(outstanding_transactions))
 
 
 def load_blockchain_from_file():
     with open('blockchain.txt', mode='r') as f:
         contents = f.readlines()
-        global blockchain = contents[0]
-        global outstanding_transactions = contents[1]
-        print(blockchain_storage)
-        print(outstanding_transactions_storage)
+        process_loaded_blockchain(
+            json.loads(contents[0][:-1]))
+        process_loaded_outstanding_transactions(json.loads(contents[1]))
+
+
+def process_loaded_blockchain(loaded_blockchain):
+    updated_blockchain = []
+    for block in loaded_blockchain:
+        updated_block = {
+            'previous_hash': block['previous_hash'],
+            'index': block['index'],
+            'proof': block['proof'],
+            'transactions': [OrderedDict(
+                [('sender', transaction['sender']), ('amount', transaction['amount']), ('recipient', transaction['recipient'])]) for transaction in block['transactions']]
+        }
+        updated_blockchain.append(updated_block)
+    else:
+        global blockchain
+        blockchain = updated_blockchain
+
+
+def process_loaded_outstanding_transactions(loaded_transactions):
+    updated_transactions = []
+    for transaction in loaded_transactions:
+        updated_transaction = OrderedDict(
+            [('sender', transaction['sender']), ('amount', transaction['amount']), ('recipient', transaction['recipient'])])
+        updated_transactions.append(updated_transaction)
+    else:
+        global outstanding_transactions
+        outstanding_transactions = updated_transactions
 
 
 def reward_user_for_mining():
