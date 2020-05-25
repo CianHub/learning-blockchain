@@ -74,6 +74,22 @@ def proof_of_work():
     return proof_number
 
 
+def save_blockchain_in_file():
+    with open('blockchain.txt', mode='w') as f:
+        f.write(str(blockchain))
+        f.write('\n')
+        f.write(str(outstanding_transactions))
+
+
+def load_blockchain_from_file():
+    with open('blockchain.txt', mode='r') as f:
+        contents = f.readlines()
+        global blockchain = contents[0]
+        global outstanding_transactions = contents[1]
+        print(blockchain_storage)
+        print(outstanding_transactions_storage)
+
+
 def reward_user_for_mining():
     # Adds a new transaction that rewards the user for mining
     # An ordered dict will always have the same order to can be reliably hashed
@@ -192,6 +208,7 @@ def verify_transaction(transaction):
 waiting_for_input = True
 
 while waiting_for_input:
+    load_blockchain_from_file()
     print('Please Choose:')
     print('1: Add a new transaction value')
     print('2: Output blockchain blocks')
@@ -210,6 +227,7 @@ while waiting_for_input:
 
         # Skips optional second argument by naming parameter
         if add_transaction(recipient, amount=amount):
+            save_blockchain_in_file()
             print('Transaction Successful')
         else:
             print('Insufficient Balance To Make Transaction')
@@ -221,6 +239,7 @@ while waiting_for_input:
         # Resets outstanding transactions on successful mining
         if mine_block():
             outstanding_transactions = []
+            save_blockchain_in_file()
 
     elif user_choice == '4':
         print(participants)
