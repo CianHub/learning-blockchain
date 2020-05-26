@@ -94,7 +94,7 @@ def load_blockchain_from_file():
             contents = f.readlines()
             process_loaded_blockchain(json.loads(contents[0][:-1]))
             process_loaded_outstanding_transactions(json.loads(contents[1]))
-    except IOError:
+    except (IOError, IndexError):
         print('File not found, initialising...')
         genesis_block = {
             'previous_hash': '',
