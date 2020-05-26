@@ -83,11 +83,13 @@ def save_blockchain_in_file():
 
 
 def load_blockchain_from_file():
-    with open('blockchain.txt', mode='r') as f:
-        contents = f.readlines()
-        process_loaded_blockchain(
-            json.loads(contents[0][:-1]))
-        process_loaded_outstanding_transactions(json.loads(contents[1]))
+    try:
+        with open('blockchain.txt', mode='r') as f:
+            contents = f.readlines()
+            process_loaded_blockchain(json.loads(contents[0][:-1]))
+            process_loaded_outstanding_transactions(json.loads(contents[1]))
+    except IOError:
+        print('File not found')
 
 
 def process_loaded_blockchain(loaded_blockchain):
