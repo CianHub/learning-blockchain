@@ -90,6 +90,8 @@ def load_blockchain_from_file():
             process_loaded_outstanding_transactions(json.loads(contents[1]))
     except IOError:
         print('File not found')
+    finally:
+        print('Loading complete')
 
 
 def process_loaded_blockchain(loaded_blockchain):
