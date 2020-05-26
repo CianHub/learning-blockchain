@@ -76,20 +76,35 @@ def proof_of_work():
 
 
 def save_blockchain_in_file():
-    with open('blockchain.txt', mode='w') as f:
-        f.write(json.dumps(blockchain))
-        f.write('\n')
-        f.write(json.dumps(outstanding_transactions))
+    try:
+        with open('blockchain.txt', mode='w') as f:
+            f.write(json.dumps(blockchain))
+            f.write('\n')
+            f.write(json.dumps(outstanding_transactions))
+    except IOError:
+        print('Saving failed')
 
 
 def load_blockchain_from_file():
+    global blockchain
+    global outstanding_transactions
+
     try:
         with open('blockchain.txt', mode='r') as f:
             contents = f.readlines()
             process_loaded_blockchain(json.loads(contents[0][:-1]))
             process_loaded_outstanding_transactions(json.loads(contents[1]))
     except IOError:
-        print('File not found')
+        print('File not found, initialising...')
+        genesis_block = {
+            'previous_hash': '',
+            'index': 0,
+            'transactions': [],
+            'proof': 100
+        }
+        blockchain = [genesis_block]
+        outstanding_transactions = []
+
     finally:
         print('Loading complete')
 
