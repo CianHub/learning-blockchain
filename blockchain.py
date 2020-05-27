@@ -4,14 +4,11 @@ from collections import OrderedDict
 import json
 
 import hash_util
+from block import Block
 
 MINING_REWARD = 10.00
-genesis_block = {
-    'previous_hash': '',
-    'index': 0,
-    'transactions': [],
-    'proof': 100
-}
+genesis_block = Block(0, '', [], 100, 0)
+
 blockchain = [genesis_block]
 outstanding_transactions = []
 owner = 'Cian'
@@ -96,12 +93,8 @@ def load_blockchain_from_file():
             process_loaded_outstanding_transactions(json.loads(contents[1]))
     except (IOError, IndexError):
         print('File not found, initialising...')
-        genesis_block = {
-            'previous_hash': '',
-            'index': 0,
-            'transactions': [],
-            'proof': 100
-        }
+        genesis_block = Block(0, '', [], 100, 0)
+
         blockchain = [genesis_block]
         outstanding_transactions = []
 
@@ -111,14 +104,26 @@ def load_blockchain_from_file():
 
 def process_loaded_blockchain(loaded_blockchain):
     updated_blockchain = []
+    # Iterate through the blockchain
+    # Iterate through the transactions in each block
+    # Return a list of the transactions in block_transactions
     for block in loaded_blockchain:
-        updated_block = {
-            'previous_hash': block['previous_hash'],
-            'index': block['index'],
-            'proof': block['proof'],
-            'transactions': [OrderedDict(
-                [('sender', transaction['sender']), ('amount', transaction['amount']), ('recipient', transaction['recipient'])]) for transaction in block['transactions']]
-        }
+        block_transactions = [OrderedDict(
+            [
+                ('sender', transaction['sender']),
+                ('amount', transaction['amount']),
+                ('recipient', transaction['recipient'])
+            ]) for transaction in block['transactions']
+        ]
+
+        # Create a new Block instance from the loaded data
+        updated_block = Block(
+            block['index'],
+            block['previous_hash'],
+            block_transactions,
+            block['proof'],
+            block['timestamp'])
+
         updated_blockchain.append(updated_block)
     else:
         global blockchain
@@ -159,12 +164,7 @@ def mine_block():
     dup_transactions = reward_user_for_mining()
 
     # Creates the new block
-    block = {
-        'previous_hash': hashed_block,
-        'index': len(blockchain),
-        'transactions': dup_transactions,
-        'proof': proof
-    }
+    block = Block(len(blockchain), hashed_block, dup_transactions, proof)
 
     # Adds the new block
     blockchain.append(block)
@@ -194,7 +194,7 @@ def get_amount_sent(participant):
     # Iterate through the blocks transactions
     # Return a list of values where the provided participant matches the sender property of the transaction
     transactions_where_sender = [
-        [transaction['amount'] for transaction in block['transactions']
+        [transaction['amount'] for transaction in block.transactions
          if transaction['sender'] == participant]
         for block in blockchain]
 
@@ -206,7 +206,7 @@ def get_amount_received(participant):
     # Iterate through the blocks transactions
     # Return a list of values where the provided participant matches the recipient property of the transaction
     transactions_where_receiver = [
-        [transaction['amount'] for transaction in block['transactions']
+        [transaction['amount'] for transaction in block.transactions
          if transaction['recipient'] == participant]
         for block in blockchain]
 
@@ -231,10 +231,10 @@ def verify_chain():
         if index == 0:
             continue
         # Compare the previous_hash value of the current block to the hashed previous block
-        if block['previous_hash'] != hash_util.hash_block(blockchain[index - 1]):
+        if block.previous_hash != hash_util.hash_block(blockchain[index - 1]):
             # Block is not valid
             return False
-        if not validate_proof_of_work(block['transactions'][:-1], block['previous_hash'], block['proof']):
+        if not validate_proof_of_work(block.transactions[:-1], block.previous_hash, block.proof):
             # Block is not valid
             return False
 
