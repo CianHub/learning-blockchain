@@ -47,12 +47,12 @@ class Node:
                     self.blockchain.save_blockchain_in_file()
 
             elif user_choice == '4':
-                if self.verifier.get_balance(self.id, self.blockchain.get_outstanding_transactions(), self.blockchain.get_chain()):
+                if self.verifier.get_balance(self.id, self.blockchain.outstanding_transactions, self.blockchain.chain):
                     print(
-                        f'{self.id}\'s balance is: {self.verifier.get_balance(self.id, self.blockchain.get_outstanding_transactions(), self.blockchain.get_chain()):6.2f}')
+                        f'{self.id}\'s balance is: {self.verifier.get_balance(self.id, self.blockchain.outstanding_transactions, self.blockchain.chain):6.2f}')
 
             elif user_choice == '5':
-                if self.verifier.verify_transactions_validity(self.blockchain.get_outstanding_transactions(), self.blockchain.get_chain()):
+                if self.verifier.verify_transactions_validity(self.blockchain.outstanding_transactions, self.blockchain.chain):
                     print('All transactions valid')
                 else:
                     print('Invalid transactions present')
@@ -63,7 +63,7 @@ class Node:
             else:
                 print('Input was invalid, please enter a valid option')
 
-            if not self.verifier.verify_chain(self.blockchain.get_chain()):
+            if not self.verifier.verify_chain(self.blockchain.chain):
                 print('Invalid blockchain')
                 self.waiting_for_input = False
 

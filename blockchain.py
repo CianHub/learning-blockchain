@@ -15,16 +15,26 @@ class Blockchain:
 
     def __init__(self, host_node_id):
         self.genesis_block = Block(0, '', [], 100, 0)
-        self.__chain = [self.genesis_block]
-        self.__outstanding_transactions = []
+        self.chain = [self.genesis_block]
+        self.outstanding_transactions = []
         self.verification = Verification()
         self.hostNode = host_node_id
 
-    def get_chain(self):
+    @property
+    def chain(self):
         return self.__chain[:]
 
-    def get_outstanding_transactions(self):
+    @chain.setter
+    def chain(self, val):
+        self.__chain = val
+
+    @property
+    def outstanding_transactions(self):
         return self.__outstanding_transactions[:]
+
+    @outstanding_transactions.setter
+    def outstanding_transactions(self, val):
+        self.__outstanding_transactions = val
 
     def add_transaction(self, recipient, sender, amount=1.0):
         # Creates the transaction dictionary
@@ -88,7 +98,7 @@ class Blockchain:
 
             updated_blockchain.append(updated_block)
         else:
-            self.__chain = updated_blockchain
+            self.chain = updated_blockchain
 
     def process_loaded_outstanding_transactions(self, loaded_transactions):
         updated_transactions = []
@@ -97,7 +107,7 @@ class Blockchain:
                 transaction['sender'], transaction['recipient'], transaction['amount'])
             updated_transactions.append(updated_transaction)
         else:
-            self.__outstanding_transactions = updated_transactions
+            self.outstanding_transactions = updated_transactions
 
     def reward_user_for_mining(self):
         # Adds a new transaction that rewards the user for mining
@@ -126,7 +136,7 @@ class Blockchain:
         # Adds the new block
         self.__chain.append(block)
 
-        self.__outstanding_transactions = []
+        self.outstanding_transactions = []
 
         return True
 
