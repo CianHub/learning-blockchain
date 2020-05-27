@@ -75,7 +75,9 @@ def proof_of_work():
 def save_blockchain_in_file():
     try:
         with open('blockchain.txt', mode='w') as f:
-            f.write(json.dumps(blockchain))
+            hashable_blockchain = [hash_util.create_hashable_block(
+                block) for block in blockchain]
+            f.write(json.dumps(hashable_blockchain))
             f.write('\n')
             f.write(json.dumps(outstanding_transactions))
     except IOError:

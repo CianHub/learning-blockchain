@@ -8,7 +8,12 @@ def hash_string_256(string):
     return hashlib.sha256(string).hexdigest()
 
 
+def create_hashable_block(block):
+    return block.__dict__.copy()
+
+
 def hash_block(block):
     # converts block dictionary to a binary string and encodes it
     # sort the dictionary by keys so it will always be in the same order
-    return hash_string_256(json.dumps(block, sort_keys=True).encode())
+    hashable_block = create_hashable_block(block)
+    return hash_string_256(json.dumps(hashable_block, sort_keys=True).encode())
