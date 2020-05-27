@@ -5,6 +5,7 @@ import json
 
 import hash_util
 from block import Block
+from transaction import Transaction
 
 MINING_REWARD = 10.00
 genesis_block = Block(0, '', [], 100, 0)
@@ -38,8 +39,7 @@ def add_transaction(recipient, sender=owner, amount=1.0):
     # Creates the transaction dictionary
     # An ordered dict will always have the same order to can be reliably hashed
     # ordered dict consturctor takes a list of tuple key value pairs
-    transaction = OrderedDict(
-        [('sender', sender), ('amount', amount), ('recipient', recipient)])
+    transaction = Transaction(sender, recipient, amount)
     if verify_transaction(transaction):
         outstanding_transactions.append(transaction)
         add_transaction_participants(sender, recipient)
@@ -57,7 +57,8 @@ def add_transaction_participants(sender, recipient):
 def validate_proof_of_work(transactions, last_hash, proof_number):
     # Create a hash from the outstanding transactions, hash of the block and the proof of work guess number
     # check if the first four digits are 00
-    guess = (str(transactions) + str(last_hash) + str(proof_number)).encode()
+    guess = (str([transaction.to_ordered_dict() for transaction in transactions]
+                 ) + str(last_hash) + str(proof_number)).encode()
     guess_hash = hash_util.hash_string_256(guess)
     print(guess_hash)
     return guess_hash[0:4] == '0000'
@@ -75,11 +76,14 @@ def proof_of_work():
 def save_blockchain_in_file():
     try:
         with open('blockchain.txt', mode='w') as f:
-            hashable_blockchain = [hash_util.create_hashable_block(
-                block) for block in blockchain]
+            hashable_blockchain = hash_util.create_hashable_blockchain(
+                blockchain)
+            hashable_transactions = hash_util.create_hashable_obj_list(
+                outstanding_transactions)
+
             f.write(json.dumps(hashable_blockchain))
             f.write('\n')
-            f.write(json.dumps(outstanding_transactions))
+            f.write(json.dumps(hashable_transactions))
     except IOError:
         print('Saving failed')
 
@@ -110,12 +114,11 @@ def process_loaded_blockchain(loaded_blockchain):
     # Iterate through the transactions in each block
     # Return a list of the transactions in block_transactions
     for block in loaded_blockchain:
-        block_transactions = [OrderedDict(
-            [
-                ('sender', transaction['sender']),
-                ('amount', transaction['amount']),
-                ('recipient', transaction['recipient'])
-            ]) for transaction in block['transactions']
+        block_transactions = [Transaction(
+            transaction['sender'],
+            transaction['recipient'],
+            transaction['amount'],
+        ) for transaction in block['transactions']
         ]
 
         # Create a new Block instance from the loaded data
@@ -135,8 +138,8 @@ def process_loaded_blockchain(loaded_blockchain):
 def process_loaded_outstanding_transactions(loaded_transactions):
     updated_transactions = []
     for transaction in loaded_transactions:
-        updated_transaction = OrderedDict(
-            [('sender', transaction['sender']), ('amount', transaction['amount']), ('recipient', transaction['recipient'])])
+        updated_transaction = Transaction(
+            transaction['sender'], transaction['recipient'], transaction['amount'])
         updated_transactions.append(updated_transaction)
     else:
         global outstanding_transactions
@@ -147,9 +150,7 @@ def reward_user_for_mining():
     # Adds a new transaction that rewards the user for mining
     # An ordered dict will always have the same order to can be reliably hashed
     # ordered dict consturctor takes a list of tuple key value pairs
-    reward_transaction = OrderedDict(
-        [('sender', 'MINING'), ('recipient', owner), ('amount', MINING_REWARD)])
-
+    reward_transaction = Transaction('MINING', owner, MINING_REWARD)
     dup_transactions = outstanding_transactions[:]
     dup_transactions.append(reward_transaction)
 
@@ -184,10 +185,9 @@ def print_blockchain_blocks():
 def get_balance(participant):
     amount_sent = get_amount_sent(participant)
     amount_received = get_amount_received(participant)
-    outstanding_sent = sum_outstanding_transactions_by_participant_type(
-        'sender', participant)
-    outstanding_received = sum_outstanding_transactions_by_participant_type(
-        'recipient', participant)
+    outstanding_sent = sum_outstanding_transactions_by_sender(participant)
+    outstanding_received = sum_outstanding_transactions_by_recipient(
+        participant)
     return (outstanding_received + amount_received) - (amount_sent + outstanding_sent)
 
 
@@ -196,8 +196,8 @@ def get_amount_sent(participant):
     # Iterate through the blocks transactions
     # Return a list of values where the provided participant matches the sender property of the transaction
     transactions_where_sender = [
-        [transaction['amount'] for transaction in block.transactions
-         if transaction['sender'] == participant]
+        [transaction.amount for transaction in block.transactions
+         if transaction.sender == participant]
         for block in blockchain]
 
     return sum_amounts_list(transactions_where_sender)
@@ -208,8 +208,8 @@ def get_amount_received(participant):
     # Iterate through the blocks transactions
     # Return a list of values where the provided participant matches the recipient property of the transaction
     transactions_where_receiver = [
-        [transaction['amount'] for transaction in block.transactions
-         if transaction['recipient'] == participant]
+        [transaction.amount for transaction in block.transactions
+         if transaction.recipient == participant]
         for block in blockchain]
 
     return sum_amounts_list(transactions_where_receiver)
@@ -221,9 +221,14 @@ def sum_amounts_list(amount_list):
                             if len(next_value) > 0 else total + 0, amount_list, 0)
 
 
-def sum_outstanding_transactions_by_participant_type(participant_type, participant):
+def sum_outstanding_transactions_by_sender(participant):
     return functools.reduce(lambda total, next_value: total +
-                            next_value['amount'] if next_value[participant_type] == participant else total + 0, outstanding_transactions, 0)
+                            next_value.amount if next_value.sender == participant else total + 0, outstanding_transactions, 0)
+
+
+def sum_outstanding_transactions_by_recipient(participant):
+    return functools.reduce(lambda total, next_value: total +
+                            next_value.amount if next_value.recipient == participant else total + 0, outstanding_transactions, 0)
 
 
 def verify_chain():
@@ -250,7 +255,7 @@ def verify_transactions_validity():
 
 def verify_transaction(transaction):
     # Get the senders balance and return if they have enough to make a transaction
-    return get_balance(transaction['sender']) >= transaction['amount']
+    return get_balance(transaction.sender) >= transaction.amount
 
 
 waiting_for_input = True
