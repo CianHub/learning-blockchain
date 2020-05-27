@@ -6,6 +6,7 @@ import json
 import hash_util
 from block import Block
 from transaction import Transaction
+from verification import Verification
 
 MINING_REWARD = 10.00
 genesis_block = Block(0, '', [], 100, 0)
@@ -14,6 +15,8 @@ blockchain = [genesis_block]
 outstanding_transactions = []
 owner = 'Cian'
 participants = {owner}
+
+verify = Verification()
 
 
 def get_transaction_data():
@@ -40,7 +43,7 @@ def add_transaction(recipient, sender=owner, amount=1.0):
     # An ordered dict will always have the same order to can be reliably hashed
     # ordered dict consturctor takes a list of tuple key value pairs
     transaction = Transaction(sender, recipient, amount)
-    if verify_transaction(transaction):
+    if verify.verify_transaction(transaction, outstanding_transactions, blockchain):
         outstanding_transactions.append(transaction)
         add_transaction_participants(sender, recipient)
         return True
@@ -52,25 +55,6 @@ def add_transaction_participants(sender, recipient):
     # Adds the sender and recipient to the set of participants
     participants.add(sender)
     participants.add(recipient)
-
-
-def validate_proof_of_work(transactions, last_hash, proof_number):
-    # Create a hash from the outstanding transactions, hash of the block and the proof of work guess number
-    # check if the first four digits are 00
-    guess = (str([transaction.to_ordered_dict() for transaction in transactions]
-                 ) + str(last_hash) + str(proof_number)).encode()
-    guess_hash = hash_util.hash_string_256(guess)
-    print(guess_hash)
-    return guess_hash[0:4] == '0000'
-
-
-def proof_of_work():
-    last_block = blockchain[-1]
-    last_hash = hash_util.hash_block(last_block)
-    proof_number = 0
-    while not validate_proof_of_work(outstanding_transactions, last_hash, proof_number):
-        proof_number += 1
-    return proof_number
 
 
 def save_blockchain_in_file():
@@ -161,7 +145,7 @@ def mine_block():
     # Gets the previous block and creates a hash from it
     last_block = blockchain[-1]
     hashed_block = hash_util.hash_block(last_block)
-    proof = proof_of_work()
+    proof = verify.proof_of_work(blockchain, outstanding_transactions)
 
     # Adds the reward for mining to the outstanding transactions
     dup_transactions = reward_user_for_mining()
@@ -180,82 +164,6 @@ def print_blockchain_blocks():
         print(block)
     else:
         print('-' * 20)
-
-
-def get_balance(participant):
-    amount_sent = get_amount_sent(participant)
-    amount_received = get_amount_received(participant)
-    outstanding_sent = sum_outstanding_transactions_by_sender(participant)
-    outstanding_received = sum_outstanding_transactions_by_recipient(
-        participant)
-    return (outstanding_received + amount_received) - (amount_sent + outstanding_sent)
-
-
-def get_amount_sent(participant):
-    # Gets each block in the blockchain, get the transaction property
-    # Iterate through the blocks transactions
-    # Return a list of values where the provided participant matches the sender property of the transaction
-    transactions_where_sender = [
-        [transaction.amount for transaction in block.transactions
-         if transaction.sender == participant]
-        for block in blockchain]
-
-    return sum_amounts_list(transactions_where_sender)
-
-
-def get_amount_received(participant):
-    # Gets each block in the blockchain, get the transaction property
-    # Iterate through the blocks transactions
-    # Return a list of values where the provided participant matches the recipient property of the transaction
-    transactions_where_receiver = [
-        [transaction.amount for transaction in block.transactions
-         if transaction.recipient == participant]
-        for block in blockchain]
-
-    return sum_amounts_list(transactions_where_receiver)
-
-
-def sum_amounts_list(amount_list):
-    # Iterate through the list and sum the values checks if next value is valid before adding
-    return functools.reduce(lambda total, next_value: total + sum(next_value)
-                            if len(next_value) > 0 else total + 0, amount_list, 0)
-
-
-def sum_outstanding_transactions_by_sender(participant):
-    return functools.reduce(lambda total, next_value: total +
-                            next_value.amount if next_value.sender == participant else total + 0, outstanding_transactions, 0)
-
-
-def sum_outstanding_transactions_by_recipient(participant):
-    return functools.reduce(lambda total, next_value: total +
-                            next_value.amount if next_value.recipient == participant else total + 0, outstanding_transactions, 0)
-
-
-def verify_chain():
-    # enumerate returns a tuple that containing the index and the value
-    # Index and block variables are assigned values from enumarate
-    for (index, block) in enumerate(blockchain):
-        if index == 0:
-            continue
-        # Compare the previous_hash value of the current block to the hashed previous block
-        if block.previous_hash != hash_util.hash_block(blockchain[index - 1]):
-            # Block is not valid
-            return False
-        if not validate_proof_of_work(block.transactions[:-1], block.previous_hash, block.proof):
-            # Block is not valid
-            return False
-
-    # Block is valid
-    return True
-
-
-def verify_transactions_validity():
-    return all([verify_transaction(transaction) for transaction in outstanding_transactions])
-
-
-def verify_transaction(transaction):
-    # Get the senders balance and return if they have enough to make a transaction
-    return get_balance(transaction.sender) >= transaction.amount
 
 
 waiting_for_input = True
@@ -298,11 +206,12 @@ while waiting_for_input:
         print(participants)
 
     elif user_choice == '5':
-        if get_balance(owner):
-            print(f'{owner}\'s balance is: {get_balance(owner):6.2f}')
+        if verify.get_balance(owner, outstanding_transactions, blockchain):
+            print(
+                f'{owner}\'s balance is: {verify.get_balance(owner, outstanding_transactions,blockchain):6.2f}')
 
     elif user_choice == '6':
-        if verify_transactions_validity():
+        if verify.verify_transactions_validity(outstanding_transactions, blockchain):
             print('All transactions valid')
         else:
             print('Invalid transactions present')
@@ -313,7 +222,7 @@ while waiting_for_input:
     else:
         print('Input was invalid, please enter a valid option')
 
-    if not verify_chain():
+    if not verify.verify_chain(blockchain):
         print('Invalid blockchain')
         waiting_for_input = False
 else:
