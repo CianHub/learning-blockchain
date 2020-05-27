@@ -8,6 +8,7 @@ class Node:
 
     def __init__(self):
         self.id = str(uuid4())
+        self.id = 'Cian'
         self.waiting_for_input = True
         self.blockchain = Blockchain(self.id)
         self.verifier = Verification()
