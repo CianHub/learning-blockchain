@@ -42,7 +42,7 @@ class Blockchain:
             # Creates the transaction dictionary
             # An ordered dict will always have the same order to can be reliably hashed
             # ordered dict consturctor takes a list of tuple key value pairs
-            transaction = Transaction(sender, recipient, amount)
+            transaction = Transaction(sender, recipient, amount, signature)
             if self.verification.verify_transaction(transaction, self.__outstanding_transactions, self.__chain):
                 self.__outstanding_transactions.append(transaction)
                 return True
@@ -87,6 +87,7 @@ class Blockchain:
                 transaction['sender'],
                 transaction['recipient'],
                 transaction['amount'],
+                transaction['signature']
             ) for transaction in block['transactions']
             ]
 
@@ -106,7 +107,7 @@ class Blockchain:
         updated_transactions = []
         for transaction in loaded_transactions:
             updated_transaction = Transaction(
-                transaction['sender'], transaction['recipient'], transaction['amount'])
+                transaction['sender'], transaction['recipient'], transaction['amount'], transaction['signature'])
             updated_transactions.append(updated_transaction)
         else:
             self.outstanding_transactions = updated_transactions
@@ -116,7 +117,7 @@ class Blockchain:
         # An ordered dict will always have the same order to can be reliably hashed
         # ordered dict consturctor takes a list of tuple key value pairs
         reward_transaction = Transaction(
-            'MINING', self.host_node_public_key, MINING_REWARD)
+            'MINING', self.host_node_public_key, MINING_REWARD, '')
         dup_transactions = self.__outstanding_transactions[:]
         dup_transactions.append(reward_transaction)
 
