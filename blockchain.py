@@ -13,12 +13,12 @@ MINING_REWARD = 10.00
 
 class Blockchain:
 
-    def __init__(self, host_node_id):
+    def __init__(self, host_node_public_key):
         self.genesis_block = Block(0, '', [], 100, 0)
         self.chain = [self.genesis_block]
         self.outstanding_transactions = []
         self.verification = Verification()
-        self.hostNode = host_node_id
+        self.host_node_public_key = host_node_public_key
 
     @property
     def chain(self):
@@ -37,15 +37,17 @@ class Blockchain:
         self.__outstanding_transactions = val
 
     def add_transaction(self, recipient, sender, amount=1.0):
-        # Creates the transaction dictionary
-        # An ordered dict will always have the same order to can be reliably hashed
-        # ordered dict consturctor takes a list of tuple key value pairs
-        transaction = Transaction(sender, recipient, amount)
-        if self.verification.verify_transaction(transaction, self.__outstanding_transactions, self.__chain):
-            self.__outstanding_transactions.append(transaction)
-            return True
+        if self.host_node_public_key != None:
+            print(self.host_node_public_key)
+            # Creates the transaction dictionary
+            # An ordered dict will always have the same order to can be reliably hashed
+            # ordered dict consturctor takes a list of tuple key value pairs
+            transaction = Transaction(sender, recipient, amount)
+            if self.verification.verify_transaction(transaction, self.__outstanding_transactions, self.__chain):
+                self.__outstanding_transactions.append(transaction)
+                return True
 
-        return False
+            return False
 
     def save_blockchain_in_file(self):
         try:
@@ -114,31 +116,34 @@ class Blockchain:
         # An ordered dict will always have the same order to can be reliably hashed
         # ordered dict consturctor takes a list of tuple key value pairs
         reward_transaction = Transaction(
-            'MINING', self.hostNode, MINING_REWARD)
+            'MINING', self.host_node_public_key, MINING_REWARD)
         dup_transactions = self.__outstanding_transactions[:]
         dup_transactions.append(reward_transaction)
 
         return dup_transactions
 
     def mine_block(self, sender):
-        # Gets the previous block and creates a hash from it
-        last_block = self.__chain[-1]
-        hashed_block = hash_util.hash_block(last_block)
-        proof = self.verification.proof_of_work(
-            self.__chain, self.__outstanding_transactions)
+        if self.host_node_public_key != None:
 
-        # Adds the reward for mining to the outstanding transactions
-        dup_transactions = self.reward_user_for_mining()
+            # Gets the previous block and creates a hash from it
+            last_block = self.__chain[-1]
+            hashed_block = hash_util.hash_block(last_block)
+            proof = self.verification.proof_of_work(
+                self.__chain, self.__outstanding_transactions)
 
-        # Creates the new block
-        block = Block(len(self.__chain), hashed_block, dup_transactions, proof)
+            # Adds the reward for mining to the outstanding transactions
+            dup_transactions = self.reward_user_for_mining()
 
-        # Adds the new block
-        self.__chain.append(block)
+            # Creates the new block
+            block = Block(len(self.__chain), hashed_block,
+                          dup_transactions, proof)
 
-        self.outstanding_transactions = []
+            # Adds the new block
+            self.__chain.append(block)
 
-        return True
+            self.outstanding_transactions = []
+
+            return True
 
     def print_blockchain_blocks(self):
         for block in self.__chain:

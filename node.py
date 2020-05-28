@@ -2,6 +2,7 @@ from utility import hash_util, verification
 from utility.verification import Verification
 
 from blockchain import Blockchain
+from wallet import Wallet
 
 from uuid import uuid4
 
@@ -9,10 +10,10 @@ from uuid import uuid4
 class Node:
 
     def __init__(self):
-        self.id = str(uuid4())
-        self.id = 'Cian'
+        self.wallet = Wallet()
         self.waiting_for_input = True
-        self.blockchain = Blockchain(self.id)
+        self.wallet.create_keys()
+        self.blockchain = Blockchain(self.wallet.public_key)
         self.verifier = Verification()
 
     def listen_for_input(self):
@@ -24,6 +25,9 @@ class Node:
             print('3: Mine a new block')
             print('4: Output your balance')
             print('5: Check outstanding transaction validity')
+            print('6: Create wallet')
+            print('7: Load wallet')
+            print('8: Save wallet keys')
             print('q: Quit')
             user_choice = self.get_user_choice()
 
@@ -34,7 +38,7 @@ class Node:
                 recipient, amount = transaction_data
 
                 # Skips optional second argument by naming parameter
-                if self.blockchain.add_transaction(recipient, self.id,  amount=amount):
+                if self.blockchain.add_transaction(recipient, self.wallet.public_key,  amount=amount):
                     self.blockchain.save_blockchain_in_file()
                     print('Transaction Successful')
                 else:
@@ -45,19 +49,35 @@ class Node:
 
             elif user_choice == '3':
                 # Resets outstanding transactions on successful mining
-                if self.blockchain.mine_block(self.id):
+                if self.blockchain.mine_block(self.wallet.public_key):
                     self.blockchain.save_blockchain_in_file()
+                else:
+                    print('Mining failed. Please check you have a wallet.')
 
             elif user_choice == '4':
-                if self.verifier.get_balance(self.id, self.blockchain.outstanding_transactions, self.blockchain.chain):
+                if self.verifier.get_balance(self.wallet.public_key, self.blockchain.outstanding_transactions, self.blockchain.chain):
                     print(
-                        f'{self.id}\'s balance is: {self.verifier.get_balance(self.id, self.blockchain.outstanding_transactions, self.blockchain.chain):6.2f}')
+                        f'{self.wallet.public_key}\'s balance is: {self.verifier.get_balance(self.wallet.public_key, self.blockchain.outstanding_transactions, self.blockchain.chain):6.2f}')
 
             elif user_choice == '5':
                 if self.verifier.verify_transactions_validity(self.blockchain.outstanding_transactions, self.blockchain.chain):
                     print('All transactions valid')
                 else:
                     print('Invalid transactions present')
+
+            elif user_choice == '6':
+                self.wallet.create_keys()
+                self.blockchain = Blockchain(self.wallet.public_key)
+                print('CREATING KEYS...')
+
+            elif user_choice == '7':
+                self.wallet.load_keys()
+                self.blockchain = Blockchain(self.wallet.public_key)
+                print('LOADING KEYS...')
+
+            elif user_choice == '8':
+                self.wallet.save_keys()
+                print('SAVING KEYS...')
 
             elif user_choice == 'q':
                 self.waiting_for_input = False
