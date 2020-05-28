@@ -7,6 +7,7 @@ from utility import hash_util, verification
 from utility.verification import Verification
 from block import Block
 from transaction import Transaction
+from wallet import Wallet
 
 MINING_REWARD = 10.00
 
@@ -43,6 +44,11 @@ class Blockchain:
             # An ordered dict will always have the same order to can be reliably hashed
             # ordered dict consturctor takes a list of tuple key value pairs
             transaction = Transaction(sender, recipient, amount, signature)
+
+            if not Wallet.verify_transaction(transaction):
+                # Check transaaction signature to make sure its valid
+                return False
+
             if self.verification.verify_transaction(transaction, self.__outstanding_transactions, self.__chain):
                 self.__outstanding_transactions.append(transaction)
                 return True
@@ -138,6 +144,11 @@ class Blockchain:
             # Creates the new block
             block = Block(len(self.__chain), hashed_block,
                           dup_transactions, proof)
+
+            for transaction in block.transactions:
+                # Check transaction signatures are valid
+                if not Wallet.verify_transaction(transaction):
+                    return False
 
             # Adds the new block
             self.__chain.append(block)
