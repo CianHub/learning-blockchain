@@ -1,3 +1,5 @@
+""" Provides helper methods for verification """
+
 from utility import hash_util
 
 import functools

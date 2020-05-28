@@ -1,3 +1,5 @@
+""" Provides helper methods for hashing element """
+
 import hashlib
 import json
 
