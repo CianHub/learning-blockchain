@@ -45,10 +45,6 @@ class Blockchain:
             # ordered dict consturctor takes a list of tuple key value pairs
             transaction = Transaction(sender, recipient, amount, signature)
 
-            if not Wallet.verify_transaction(transaction):
-                # Check transaaction signature to make sure its valid
-                return False
-
             if self.verification.verify_transaction(transaction, self.__outstanding_transactions, self.__chain):
                 self.__outstanding_transactions.append(transaction)
                 return True
@@ -132,6 +128,11 @@ class Blockchain:
     def mine_block(self, sender):
         if self.host_node_public_key != None:
 
+            for transaction in self.__chain[-1].transactions[:]:
+                # Check transaction signatures are valid
+                if not Wallet.verify_transaction(transaction):
+                    return False
+
             # Gets the previous block and creates a hash from it
             last_block = self.__chain[-1]
             hashed_block = hash_util.hash_block(last_block)
@@ -144,11 +145,6 @@ class Blockchain:
             # Creates the new block
             block = Block(len(self.__chain), hashed_block,
                           dup_transactions, proof)
-
-            for transaction in block.transactions:
-                # Check transaction signatures are valid
-                if not Wallet.verify_transaction(transaction):
-                    return False
 
             # Adds the new block
             self.__chain.append(block)

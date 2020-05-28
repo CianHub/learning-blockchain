@@ -1,6 +1,7 @@
 """ Provides helper methods for verification """
 
 from utility import hash_util
+from wallet import Wallet
 
 import functools
 
@@ -28,12 +29,14 @@ class Verification:
 
     @classmethod
     def verify_transactions_validity(cls, outstanding_transactions, blockchain):
-        return all([cls.verify_transaction(transaction, outstanding_transactions, blockchain) for transaction in outstanding_transactions])
+        return all([cls.verify_transaction(transaction, outstanding_transactions, blockchain, False) for transaction in outstanding_transactions])
 
     @classmethod
-    def verify_transaction(cls, transaction, outstanding_transactions, blockchain):
-        # Get the senders balance and return if they have enough to make a transaction
-        return cls.get_balance(transaction.sender, outstanding_transactions, blockchain) >= transaction.amount
+    def verify_transaction(cls, transaction, outstanding_transactions, blockchain, check_funds=True):
+        if check_funds:
+            # Get the senders balance and return if they have enough to make a transaction
+            return cls.get_balance(transaction.sender, outstanding_transactions, blockchain) >= transaction.amount
+        return Wallet.verify_transaction(transaction)
 
     @classmethod
     def get_balance(cls, participant, outstanding_transactions, blockchain):
