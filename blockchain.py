@@ -36,7 +36,7 @@ class Blockchain:
     def outstanding_transactions(self, val):
         self.__outstanding_transactions = val
 
-    def add_transaction(self, recipient, sender, amount=1.0):
+    def add_transaction(self, signature, recipient, sender, amount=1.0):
         if self.host_node_public_key != None:
             print(self.host_node_public_key)
             # Creates the transaction dictionary

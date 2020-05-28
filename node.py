@@ -38,7 +38,9 @@ class Node:
                 recipient, amount = transaction_data
 
                 # Skips optional second argument by naming parameter
-                if self.blockchain.add_transaction(recipient, self.wallet.public_key,  amount=amount):
+                signature = self.wallet.sign_transaction(
+                    self.wallet.public_key, recipient, amount)
+                if self.blockchain.add_transaction(signature, recipient, self.wallet.public_key,  amount=amount):
                     self.blockchain.save_blockchain_in_file()
                     print('Transaction Successful')
                 else:

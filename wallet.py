@@ -1,4 +1,6 @@
 from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.Hash import SHA256
 import Crypto.Random
 import binascii
 
@@ -38,3 +40,11 @@ class Wallet:
                 self.private_key = keys[1]
         except (IOError, IndexError):
             print('Loading wallet failed')
+
+    def sign_transaction(self, sender, recipient, amount):
+        signer_id = PKCS1_v1_5.new(RSA.import_key(
+            binascii.unhexlify(self.private_key)))
+        hashed_transaction = SHA256.new((
+            str(sender) + str(recipient) + str(amount)).encode('utf8'))
+        signature = signer_id.sign(hashed_transaction)
+        return binascii.hexlify(signature).decode('ascii')
