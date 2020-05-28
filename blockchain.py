@@ -128,7 +128,7 @@ class Blockchain:
     def mine_block(self, sender):
         if self.host_node_public_key != None:
 
-            for transaction in self.__chain[-1].transactions[:]:
+            for transaction in block.transactions[:]:
                 # Check transaction signatures are valid
                 if not Wallet.verify_transaction(transaction):
                     return False

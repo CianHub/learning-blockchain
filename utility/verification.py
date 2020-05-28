@@ -35,7 +35,7 @@ class Verification:
     def verify_transaction(cls, transaction, outstanding_transactions, blockchain, check_funds=True):
         if check_funds:
             # Get the senders balance and return if they have enough to make a transaction
-            return cls.get_balance(transaction.sender, outstanding_transactions, blockchain) >= transaction.amount
+            return cls.get_balance(transaction.sender, outstanding_transactions, blockchain) >= transaction.amount and Wallet.verify_transaction(transaction)
         return Wallet.verify_transaction(transaction)
 
     @classmethod
