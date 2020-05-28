@@ -1,4 +1,6 @@
-from verification import Verification
+from utility import hash_util, verification
+from utility.verification import Verification
+
 from blockchain import Blockchain
 
 from uuid import uuid4
