@@ -40,13 +40,16 @@ class Verification:
 
     @classmethod
     def get_balance(cls, participant, outstanding_transactions, blockchain):
-        amount_sent = cls.get_amount_sent(participant, blockchain)
-        amount_received = cls.get_amount_received(participant, blockchain)
-        outstanding_sent = cls.sum_outstanding_transactions_by_sender(
-            participant, outstanding_transactions)
-        outstanding_received = cls.sum_outstanding_transactions_by_recipient(
-            participant, outstanding_transactions)
-        return (outstanding_received + amount_received) - (amount_sent + outstanding_sent)
+        if participant == None:
+            return None
+        else:
+            amount_sent = cls.get_amount_sent(participant, blockchain)
+            amount_received = cls.get_amount_received(participant, blockchain)
+            outstanding_sent = cls.sum_outstanding_transactions_by_sender(
+                participant, outstanding_transactions)
+            outstanding_received = cls.sum_outstanding_transactions_by_recipient(
+                participant, outstanding_transactions)
+            return (outstanding_received + amount_received) - (amount_sent + outstanding_sent)
 
     @classmethod
     def get_amount_sent(cls, participant, blockchain):
