@@ -125,13 +125,13 @@ class Blockchain:
 
         return dup_transactions
 
-    def mine_block(self, sender):
+    def mine_block(self):
         if self.host_node_public_key != None:
 
             for transaction in self.__chain[-1].transactions[:]:
                 # Check transaction signatures are valid
                 if not Wallet.verify_transaction(transaction):
-                    return False
+                    return None
 
             # Gets the previous block and creates a hash from it
             last_block = self.__chain[-1]
@@ -151,10 +151,26 @@ class Blockchain:
 
             self.outstanding_transactions = []
 
-            return True
+            return block
 
     def print_blockchain_blocks(self):
         for block in self.__chain:
             print(block)
         else:
             print('-' * 20)
+
+    def convert_blockchain_to_json(self):
+        # iterate through blockchain and get a dict for each block
+        dict_chain = [block.__dict__.copy() for block in self.chain]
+
+        # iterate through each block and their transactions and convert each transaction to a dict
+        for dict_block in dict_chain:
+            dict_block = self.convert_block_transactions_to_json(dict_block)
+
+        return dict_chain
+
+    def convert_block_transactions_to_json(self, block):
+        block['transactions'] = [
+            transaction.__dict__.copy() for transaction in block['transactions']]
+
+        return block

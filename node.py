@@ -21,17 +21,28 @@ def get_ui():
     return 'Its working!'
 
 
+@app.route('/mine', methods=['POST'])
+def mine_block():
+    block = blockchain.mine_block()
+    if block != None:
+        response = {
+            'message': 'Block added successfully',
+            'block': blockchain.convert_block_transactions_to_json(block)
+        }
+        return jsonify(response), 201
+    else:
+        response = {
+            'message': 'Adding a block failed.',
+            'wallet_set_up': flask_wallet.public_key != None
+        }
+        return jsonify(response), 500
+
+
 @app.route('/chain', methods=['GET'])
 def get_blockchain():
-    chain = blockchain.chain
-    # iterate through blockchain and get a dict for each block
-    dict_chain = [block.__dict__.copy() for block in chain]
+    chain = blockchain.convert_blockchain_to_json()
 
-    # iterate through each block and their transactions and convert each transaction to a dict
-    for dict_block in dict_chain:
-        dict_block['transactions'] = [transaction.__dict__.copy()
-                                      for transaction in dict_block['transactions']]
-    return jsonify(dict_chain), 200
+    return jsonify(chain), 200
 
 
     # Will only launch server if node.py is run in its own context
