@@ -70,7 +70,19 @@ def create_keys():
 
 @app.route('/wallet', methods=['GET'])
 def load_keys():
-    flask_wallet.load_keys()
+    if flask_wallet.load_keys():
+        response = {
+            'public_key': flask_wallet.public_key,
+            'private_key': flask_wallet.private_key
+        }
+        global blockchain
+        blockchain = Blockchain(flask_wallet.public_key)
+        return jsonify(response), 201
+    else:
+        response = {
+            'message': 'Loading the keys failed.'
+        }
+        return jsonify(response), 500
 
 
 # Will only launch server if node.py is run in its own context
