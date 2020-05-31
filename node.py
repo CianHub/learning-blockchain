@@ -48,7 +48,7 @@ def mine_block():
 
 @app.route('/transactions', methods=['GET'])
 def get_outstanding_transactions():
-    transactions = blockchain.get_open_transactions()
+    transactions = blockchain.outstanding_transactions
     dict_transactions = [transaction.__dict__ for transaction in transactions]
 
     return jsonify(dict_transactions), 200
