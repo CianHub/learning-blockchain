@@ -46,6 +46,14 @@ def mine_block():
         return jsonify(response), 500
 
 
+@app.route('/transactions', methods=['GET'])
+def get_outstanding_transactions():
+    transactions = blockchain.get_open_transactions()
+    dict_transactions = [transaction.__dict__ for transaction in transactions]
+
+    return jsonify(dict_transactions), 200
+
+
 @app.route('/transaction', methods=['POST'])
 def add_transaction():
     if flask_wallet.public_key == None:
