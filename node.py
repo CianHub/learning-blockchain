@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from wallet import Wallet
@@ -42,6 +42,58 @@ def mine_block():
         response = {
             'message': 'Adding a block failed.',
             'wallet_set_up': flask_wallet.public_key != None
+        }
+        return jsonify(response), 500
+
+
+@app.route('/transaction', methods=['POST'])
+def add_transaction():
+    if flask_wallet.public_key == None:
+        response = {
+            'message': 'No wallet found'
+        }
+        return jsonify(response), 400
+
+    values = request.get_json()
+
+    if not values:
+        response = {
+            'message': 'No data found'
+        }
+        return jsonify(response), 400
+
+    required_fields = ['recipient', 'amount']
+
+    if not all(field in values for field in required_fields):
+        response = {
+            'message': 'Required data is missing'
+        }
+        return jsonify(response), 400
+
+    recipient = values['recipient']
+    amount = values['amount']
+    signature = flask_wallet.sign_transaction(
+        flask_wallet.public_key, recipient, amount)
+
+    success = blockchain.add_transaction(
+        signature, recipient, flask_wallet.public_key, amount)
+
+    if success:
+        response = {
+            'message': 'Add transaction succeeded',
+            'transaction': {
+                'sender': flask_wallet.public_key,
+                'recipient': recipient,
+                'amount': amount,
+                'signature': signature
+            },
+            'funds': verification.get_balance(flask_wallet.public_key, blockchain.outstanding_transactions, blockchain.chain)
+        }
+        return jsonify(response), 201
+
+    else:
+        response = {
+            'message': 'Add transaction failed'
         }
         return jsonify(response), 500
 
