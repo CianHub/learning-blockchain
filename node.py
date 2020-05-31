@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
 from wallet import Wallet
@@ -20,7 +20,7 @@ CORS(app)
 # Configured to run when a GET req is sent to index
 @app.route('/', methods=['GET'])
 def get_ui():
-    return 'Its working!'
+    return send_from_directory('ui', 'node.html')
 
 
 @app.route('/mine', methods=['POST'])
