@@ -221,6 +221,11 @@ def get_nodes():
     return jsonify(response), 200
 
 
+@app.route('/network', methods=['GET'])
+def get_network_ui():
+    return send_from_directory('ui', 'network.html')
+
+
 # Will only launch server if node.py is run in its own context
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
