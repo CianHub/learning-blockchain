@@ -8,8 +8,7 @@ from utility.verification import Verification
 # Pass Flask the Python file to establish the context in which it runs
 app = Flask(__name__)
 
-flask_wallet = Wallet()
-blockchain = Blockchain(flask_wallet.public_key)
+
 verification = Verification()
 
 # Enable Cross-Origin Resource sharing
@@ -138,7 +137,7 @@ def create_keys():
 
     if flask_wallet.save_keys():
         global blockchain
-        blockchain = Blockchain(flask_wallet.public_key)
+        blockchain = Blockchain(port, flask_wallet.public_key)
         response = {
             'public_key': flask_wallet.public_key,
             'private_key': flask_wallet.private_key,
@@ -158,7 +157,7 @@ def create_keys():
 def load_keys():
     if flask_wallet.load_keys():
         global blockchain
-        blockchain = Blockchain(flask_wallet.public_key)
+        blockchain = Blockchain(port, flask_wallet.public_key)
         response = {
             'public_key': flask_wallet.public_key,
             'private_key': flask_wallet.private_key,
@@ -228,4 +227,11 @@ def get_network_ui():
 
 # Will only launch server if node.py is run in its own context
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser.add_argument('-p', '--port', type=int, default=5000)
+    args = parser.parse_args()
+    port = args.port
+    flask_wallet = Wallet(port)
+    blockchain = Blockchain(port, flask_wallet.public_key)
+    app.run(host='0.0.0.0', port=port)

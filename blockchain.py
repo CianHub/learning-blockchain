@@ -14,12 +14,13 @@ MINING_REWARD = 10.00
 
 class Blockchain:
 
-    def __init__(self, host_node_public_key):
+    def __init__(self, node_id, host_node_public_key):
         self.genesis_block = Block(0, '', [], 100, 0)
         self.chain = [self.genesis_block]
         self.outstanding_transactions = []
         self.verification = Verification()
         self.host_node_public_key = host_node_public_key
+        self.node_id = node_id
         self.__peer_nodes = set()
         self.load_blockchain_from_file()
 
@@ -57,7 +58,7 @@ class Blockchain:
 
     def save_blockchain_in_file(self):
         try:
-            with open('blockchain.txt', mode='w') as f:
+            with open('blockchain-{}.txt'.format(self.node_id), mode='w') as f:
                 hashable_blockchain = hash_util.create_hashable_blockchain(
                     self.__chain)
                 hashable_transactions = hash_util.create_hashable_obj_list(
@@ -75,7 +76,7 @@ class Blockchain:
     def load_blockchain_from_file(self):
 
         try:
-            with open('blockchain.txt', mode='r') as f:
+            with open('blockchain-{}.txt'.format(self.node_id), mode='r') as f:
                 contents = f.readlines()
                 self.process_loaded_blockchain(json.loads(contents[0][:-1]))
                 self.process_loaded_outstanding_transactions(
