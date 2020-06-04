@@ -21,6 +21,7 @@ class Blockchain:
         self.verification = Verification()
         self.host_node_public_key = host_node_public_key
         self.__peer_nodes = set()
+        self.load_blockchain_from_file()
 
     @property
     def chain(self):
