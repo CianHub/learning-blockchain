@@ -20,6 +20,7 @@ class Blockchain:
         self.outstanding_transactions = []
         self.verification = Verification()
         self.host_node_public_key = host_node_public_key
+        self.__peer_nodes = set()
 
     @property
     def chain(self):
@@ -64,6 +65,9 @@ class Blockchain:
                 f.write(json.dumps(hashable_blockchain))
                 f.write('\n')
                 f.write(json.dumps(hashable_transactions))
+                f.write('\n')
+                f.write(json.dumps(list(self.__peer_nodes)))
+
         except IOError:
             print('Saving failed')
 
@@ -74,7 +78,8 @@ class Blockchain:
                 contents = f.readlines()
                 self.process_loaded_blockchain(json.loads(contents[0][:-1]))
                 self.process_loaded_outstanding_transactions(
-                    json.loads(contents[1]))
+                    json.loads(contents[1][:-1]))
+                self.process_loaded_peer_nodes(json.loads(contents[2]))
         except (IOError, IndexError):
             print('File not found, initialising...')
 
@@ -115,6 +120,9 @@ class Blockchain:
             updated_transactions.append(updated_transaction)
         else:
             self.outstanding_transactions = updated_transactions
+
+    def process_loaded_peer_nodes(self, loaded_peer_nodes):
+        self.__peer_nodes = set(loaded_peer_nodes)
 
     def reward_user_for_mining(self):
         # Adds a new transaction that rewards the user for mining
@@ -176,3 +184,16 @@ class Blockchain:
             transaction.__dict__.copy() for transaction in block['transactions']]
 
         return block
+
+    def add_peer_node(self, node):
+        # adds a new node to the peer_node set
+        # Takes in node IP
+        self.__peer_nodes.add(node)
+        self.save_blockchain_in_file()
+
+    def remove_peer_node(self, node):
+        self.__peer_nodes.discard(node)
+        self.save_blockchain_in_file()
+
+    def get_peer_nodes(self):
+        return list(self.__peer_nodes)
