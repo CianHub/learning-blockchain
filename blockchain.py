@@ -2,6 +2,7 @@ import functools
 import hashlib
 from collections import OrderedDict
 import json
+import requests
 
 from utility import hash_util, verification
 from utility.verification import Verification
@@ -52,6 +53,18 @@ class Blockchain:
 
         if self.verification.verify_transaction(transaction, self.__outstanding_transactions, self.__chain):
             self.__outstanding_transactions.append(transaction)
+            self.save_blockchain_in_file()
+
+            for node in self.__peer_nodes:
+                url = 'http://{}/broadcast-transaction'.format(node)
+                response = requests.post(url, json={
+                    "sender": sender, "recipient": recipient, "amount": amount, "signature": signature})
+                try:
+                    if response.status_code == 400 or response.status_code == 500:
+                        print('Transaction declined')
+                        return False
+                except requests.exceptions.ConnectionError:
+                    continue
             return True
 
         return False
