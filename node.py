@@ -225,6 +225,39 @@ def get_network_ui():
     return send_from_directory('ui', 'network.html')
 
 
+@app.route('/broadcast-transaction')
+def broadcast_transaction():
+    values = request.get_json()
+    if not values:
+        response = {'message': "No data found"}
+        return jsonify(response), 400
+    required = ['sender', 'recipient', 'amount', 'signature']
+    if not all(key in values for key in required):
+        response = {'message': "Some data missing"}
+        return jsonify(response), 400
+    success = blockchain.add_transaction(
+        values['recipient'], values['sender'], values['amount'], values['signature'], is_receiving=True)
+
+    if success:
+        response = {
+            'message': 'Add transaction succeeded',
+            'transaction': {
+                'sender': values['sender'],
+                'recipient': values['recipient'],
+                'amount': values['amount'],
+                'signature': values['signature']
+            },
+
+        }
+        return jsonify(response), 201
+
+    else:
+        response = {
+            'message': 'Add transaction failed'
+        }
+        return jsonify(response), 500
+
+
 # Will only launch server if node.py is run in its own context
 if __name__ == '__main__':
     from argparse import ArgumentParser

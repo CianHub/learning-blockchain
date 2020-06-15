@@ -39,7 +39,15 @@ class Verification:
         return Wallet.verify_transaction(transaction)
 
     @classmethod
-    def get_balance(cls, participant, outstanding_transactions, blockchain):
+    def get_balance(cls, participant, outstanding_transactions, blockchain, sender=None):
+
+        if sender == None:
+            if blockchain.public_key == None:
+                return None
+            participant = blockchain.public_key
+        else:
+            participant == sender
+
         if participant == None:
             return None
         else:
