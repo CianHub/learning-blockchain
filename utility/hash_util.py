@@ -1,36 +1,23 @@
-""" Provides helper methods for hashing element """
-
-import hashlib
+import hashlib as hl
 import json
 
+# __all__ = ['hash_string_256', 'hash_block']
 
 def hash_string_256(string):
-    # creates a btye hash from the binary string
-    # converst the byte hash to a string with hexdigest
-    return hashlib.sha256(string).hexdigest()
+    """Create a SHA256 hash for a given input string.
 
-
-def create_hashable_object(obj):
-    return obj.__dict__.copy()
-
-
-def create_hashable_obj_list(obj_list):
-    return [create_hashable_object(obj) for obj in obj_list]
-
-
-def create_hashable_block(block):
-    hashable_block = create_hashable_object(block)
-    hashable_block['transactions'] = create_hashable_obj_list(
-        block.transactions)
-    return hashable_block
-
-
-def create_hashable_blockchain(blockchain):
-    return [create_hashable_block(block) for block in blockchain]
+    Arguments:
+        :string: The string which should be hashed.
+    """
+    return hl.sha256(string).hexdigest()
 
 
 def hash_block(block):
-    # converts block dictionary to a binary string and encodes it
-    # sort the dictionary by keys so it will always be in the same order
+    """Hashes a block and returns a string representation of it.
 
-    return hash_string_256(json.dumps(create_hashable_block(block), sort_keys=True).encode())
+    Arguments:
+        :block: The block that should be hashed.
+    """
+    hashable_block = block.__dict__.copy()
+    hashable_block['transactions'] = [tx.to_ordered_dict() for tx in hashable_block['transactions']]
+    return hash_string_256(json.dumps(hashable_block, sort_keys=True).encode())

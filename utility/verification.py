@@ -1,118 +1,55 @@
-""" Provides helper methods for verification """
+"""Provides verification helper methods."""
 
-from utility import hash_util
+from utility.hash_util import hash_string_256, hash_block
 from wallet import Wallet
 
-import functools
-
-
 class Verification:
-
+    """A helper class which offer various static and class-based verification and validation methods."""
     @staticmethod
-    def validate_proof_of_work(transactions, last_hash, proof_number):
-        # Create a hash from the outstanding transactions, hash of the block and the proof of work guess number
-        # check if the first four digits are 00
-        guess = (str([transaction.to_ordered_dict() for transaction in transactions]
-                     ) + str(last_hash) + str(proof_number)).encode()
-        guess_hash = hash_util.hash_string_256(guess)
-        print(guess_hash)
-        return guess_hash[0:4] == '0000'
+    def valid_proof(transactions, last_hash, proof):
+        """Validate a proof of work number and see if it solves the puzzle algorithm (two leading 0s)
 
-    @classmethod
-    def proof_of_work(cls, blockchain, outstanding_transactions):
-        last_block = blockchain[-1]
-        last_hash = hash_util.hash_block(last_block)
-        proof_number = 0
-        while not cls.validate_proof_of_work(outstanding_transactions, last_hash, proof_number):
-            proof_number += 1
-        return proof_number
-
-    @classmethod
-    def verify_transactions_validity(cls, outstanding_transactions, blockchain):
-        return all([cls.verify_transaction(transaction, outstanding_transactions, blockchain, False) for transaction in outstanding_transactions])
-
-    @classmethod
-    def verify_transaction(cls, transaction, outstanding_transactions, blockchain, check_funds=True):
-        if check_funds:
-            # Get the senders balance and return if they have enough to make a transaction
-            return cls.get_balance(transaction.sender, outstanding_transactions, blockchain) >= transaction.amount
-        return Wallet.verify_transaction(transaction)
-
-    @classmethod
-    def get_balance(cls, participant, outstanding_transactions, blockchain, sender=None):
-
-        if sender == None:
-            if blockchain.public_key == None:
-                return None
-            participant = blockchain.public_key
-        else:
-            participant == sender
-
-        if participant == None:
-            return None
-        else:
-            amount_sent = cls.get_amount_sent(participant, blockchain)
-            amount_received = cls.get_amount_received(participant, blockchain)
-            outstanding_sent = cls.sum_outstanding_transactions_by_sender(
-                participant, outstanding_transactions)
-            outstanding_received = cls.sum_outstanding_transactions_by_recipient(
-                participant, outstanding_transactions)
-            return (outstanding_received + amount_received) - (amount_sent + outstanding_sent)
-
-    @classmethod
-    def get_amount_sent(cls, participant, blockchain):
-        # Gets each block in the blockchain, get the transaction property
-        # Iterate through the blocks transactions
-        # Return a list of values where the provided participant matches the sender property of the transaction
-        transactions_where_sender = [
-            [transaction.amount for transaction in block.transactions
-             if transaction.sender == participant]
-            for block in blockchain]
-
-        return cls.sum_amounts_list(transactions_where_sender)
-
-    @classmethod
-    def get_amount_received(cls, participant, blockchain):
-        # Gets each block in the blockchain, get the transaction property
-        # Iterate through the blocks transactions
-        # Return a list of values where the provided participant matches the recipient property of the transaction
-        transactions_where_receiver = [
-            [transaction.amount for transaction in block.transactions
-             if transaction.recipient == participant]
-            for block in blockchain]
-
-        return cls.sum_amounts_list(transactions_where_receiver)
-
-    @staticmethod
-    def sum_amounts_list(amount_list):
-        # Iterate through the list and sum the values checks if next value is valid before adding
-        return functools.reduce(lambda total, next_value: total + sum(next_value)
-                                if len(next_value) > 0 else total + 0, amount_list, 0)
-
-    @staticmethod
-    def sum_outstanding_transactions_by_sender(participant, outstanding_transactions):
-        return functools.reduce(lambda total, next_value: total +
-                                next_value.amount if next_value.sender == participant else total + 0, outstanding_transactions, 0)
-
-    @staticmethod
-    def sum_outstanding_transactions_by_recipient(participant, outstanding_transactions):
-        return functools.reduce(lambda total, next_value: total +
-                                next_value.amount if next_value.recipient == participant else total + 0, outstanding_transactions, 0)
-
+        Arguments:
+            :transactions: The transactions of the block for which the proof is created.
+            :last_hash: The previous block's hash which will be stored in the current block.
+            :proof: The proof number we're testing.
+        """
+        # Create a string with all the hash inputs
+        guess = (str([tx.to_ordered_dict() for tx in transactions]) + str(last_hash) + str(proof)).encode()
+        # Hash the string
+        # IMPORTANT: This is NOT the same hash as will be stored in the previous_hash. It's a not a block's hash. It's only used for the proof-of-work algorithm.
+        guess_hash = hash_string_256(guess)
+        # Only a hash (which is based on the above inputs) which starts with two 0s is treated as valid
+        # This condition is of course defined by you. You could also require 10 leading 0s - this would take significantly longer (and this allows you to control the speed at which new blocks can be added)
+        return guess_hash[0:2] == '00'
+        
     @classmethod
     def verify_chain(cls, blockchain):
-        # enumerate returns a tuple that containing the index and the value
-        # Index and block variables are assigned values from enumarate
+        """ Verify the current blockchain and return True if it's valid, False otherwise."""
         for (index, block) in enumerate(blockchain):
             if index == 0:
                 continue
-            # Compare the previous_hash value of the current block to the hashed previous block
-            if block.previous_hash != hash_util.hash_block(blockchain[index - 1]):
-                # Block is not valid
+            if block.previous_hash != hash_block(blockchain[index - 1]):
                 return False
-            if not cls.validate_proof_of_work(block.transactions[:-1], block.previous_hash, block.proof):
-                # Block is not valid
+            if not cls.valid_proof(block.transactions[:-1], block.previous_hash, block.proof):
+                print('Proof of work is invalid')
                 return False
-
-        # Block is valid
         return True
+
+    @staticmethod
+    def verify_transaction(transaction, get_balance, check_funds=True):
+        """Verify a transaction by checking whether the sender has sufficient coins.
+
+        Arguments:
+            :transaction: The transaction that should be verified.
+        """
+        if check_funds:
+            sender_balance = get_balance(transaction.sender)
+            return sender_balance >= transaction.amount and Wallet.verify_transaction(transaction)
+        else:
+            return Wallet.verify_transaction(transaction)
+
+    @classmethod
+    def verify_transactions(cls, open_transactions, get_balance):
+        """Verifies all open transactions."""
+        return all([cls.verify_transaction(tx, get_balance, False) for tx in open_transactions])
